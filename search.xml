@@ -97,21 +97,14 @@
       </tags>
   </entry>
   <entry>
-    <title>Hello World</title>
+    <title>新的启程 新的起点</title>
     <url>/2025/07/31/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+    <content><![CDATA[<p>考完 OSCP 就想着重装电脑了，但是忘记将网站备份了，所以花了点时间重新搭建了一个新的，老的就让他做个留念吧。</p>
+<p>OSCP 确实对于 0 基础的比较难考，三个月的学习十分疲惫但收获满满</p>
+<p>在面试上 ，面试官一定会问你 OSCP 的一些内容，比如怎么考，考了什么等；有些面试官不懂，甚至会拿一些他认为是 OSCP 考察的内容来问你 <del>这种情况下如果你没答上来极端点的可能会质疑这个证是不是你自己考的</del></p>
+<p>考完后又参加了 hw 红队，参与了实习，初步感受是 OSCP 的教学内容有点难以适应中国的环境，换句话说，就是再 WAF 面前有点不够看了，至少信息收集和漏洞探测那一部分的内容差不多是这样的，提权和 AD 域碰到的比较少，不做评价。</p>
+<p>目前打算学学 pwn 应付下导师要求参加的比赛，比完后就去学 OWSE ，米足够的话就把 OSCE³ 考出来。</p>
+<p>Try Harder ！</p>
 ]]></content>
   </entry>
 </search>
